@@ -312,7 +312,7 @@ const AdminPage = () => {
     `;
   };
 
-  function loadTamilFont() {
+  const loadTamilFont = async () => {
     if (!document.getElementById('tamil-font-link')) {
       const link = document.createElement('link');
       link.id = 'tamil-font-link';
@@ -320,19 +320,33 @@ const AdminPage = () => {
       link.rel = 'stylesheet';
       document.head.appendChild(link);
     }
-  }
+    if (document.fonts) {
+      try {
+        await document.fonts.ready;
+      } catch (e) {
+        // ignore font readiness errors
+      }
+    }
+  };
 
   const downloadThermalBill = async (order) => {
     setThermalGenerating(order._id);
     try {
-      loadTamilFont();
+      await loadTamilFont();
       const element = document.createElement('div');
       element.innerHTML = getThermalBillHTML(order);
 
       const opt = {
         margin: 0,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false }
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          scrollX: 0,
+          scrollY: 0
+        },
+        jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' }
       };
 
       const imgData = await html2pdf().set(opt).from(element).outputImg('dataurlstring');
@@ -362,7 +376,7 @@ const AdminPage = () => {
     }
 
     try {
-      loadTamilFont();
+      await loadTamilFont();
       let filenameDate = new Date().toISOString().slice(0, 10);
       if (exportDate) {
         filenameDate = new Date(exportDate).toISOString().slice(0, 10);
@@ -384,7 +398,14 @@ const AdminPage = () => {
         const opt = {
           margin: 0,
           image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, logging: false }
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            scrollX: 0,
+            scrollY: 0
+          },
+          jsPDF: { unit: 'in', format: [4, 6], orientation: 'portrait' }
         };
 
         const imgData = await html2pdf().set(opt).from(element).outputImg('dataurlstring');
@@ -542,7 +563,7 @@ const AdminPage = () => {
     const opt = {
       margin: 0,
       filename: `label-${order._id}-${new Date().toISOString().slice(0, 10)}.pdf`,
-      html2canvas: { scale: 2 },
+      html2canvas: { scale: 2, scrollX: 0, scrollY: 0 },
       jsPDF: {
         unit: 'in',
         format: [4, 10], // IMPORTANT: bigger height → no blank cut issue
